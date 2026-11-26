@@ -4,7 +4,7 @@ import { Hint } from './components/Hint'
 import { Tag } from './components/Tag'
 import { applyMeta, t, tx } from './i18n'
 import { startAnalytics, track } from './analytics'
-import { landing, live, peakEvery, sharePeak, trackLanding } from './share'
+import { arrive, landing, live, peakEvery, sharePeak, trackLanding } from './share'
 import { startGame, type GameApi } from './game'
 
 const Q = new URLSearchParams(location.search)
@@ -62,6 +62,8 @@ export default function App() {
       },
     })
     api.current = g
+    // a portal visit (void's sock, knock's incense smoke): the tag, and the rain view with the sock, or one puff
+    arrive('silk', ['top-14', 'bg-[#FFFDF8] text-[#3B3A32]']).then((a) => a && g.arrive?.(a.from === 'void' ? 'rain' : 'puff'))
     // the time by the window, shown after 30 s
     const iv = window.setInterval(() => setSec(g.sec()), 1000)
     return () => {

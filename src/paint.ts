@@ -293,6 +293,9 @@ function blur(src: Float32Array, N: number, r: number): Float32Array {
 /** the outside quad: a plane 2 m behind the wall */
 export const OUT = { y: -2.2, x0: -1.4, x1: 1.4, z0: 0.15, z1: 3.0 }
 
+/** extra things in the view: the odd sock on the line (a portal visit from void; drawn by sock.ts) */
+export const extras: { sock?: (g: CanvasRenderingContext2D, at: [number, number], u: number, v: number, night: boolean) => void } = {}
+
 export function paintOutside(pal: Palette): HTMLCanvasElement {
   const W = 768,
     H = Math.round((W * (OUT.z1 - OUT.z0)) / (OUT.x1 - OUT.x0))
@@ -465,6 +468,8 @@ export function paintOutside(pal: Palette): HTMLCanvasElement {
   cloth(0.28, 0.2, 0.26, '#F2F2EE', true)
   cloth(0.56, 0.2, 0.25, '#8DB3D9', true)
   cloth(0.86, 0.42, 0.5, '#E59A8C', false)
+  // a portal visit from void: one odd sock on the line (sock.ts, loaded with the arrival)
+  extras.sock?.(g, P(0.13, 1.555 + 0.08 * 0.037), (0.075 / (OUT.x1 - OUT.x0)) * W, (0.21 / (OUT.z1 - OUT.z0)) * H, night)
   // the quilt's pattern
   if (!night) {
     const [qa, qb] = P(0.86, 1.585)

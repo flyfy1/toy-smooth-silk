@@ -446,6 +446,11 @@ export class Renderer {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
   }
 
+  /** repaint the view outside next frame (the sock arrived) */
+  dropOutside() {
+    for (const k in this.outside) this.gl.deleteTexture(this.outside[k as PalId]!)
+    this.outside = {}
+  }
   private palTex(pal: Palette) {
     if (!this.outside[pal.id]) this.outside[pal.id] = this.texCanvas(paintOutside(pal), true)
     if (!this.sillTex[pal.id]) this.sillTex[pal.id] = this.texCanvas(paintSillThings(pal, 'pot'), true)

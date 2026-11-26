@@ -7,7 +7,8 @@ import { MeshAttribs, Refiner, gridIndices, gridUV } from './cloth/mesh'
 import { Renderer } from './gl'
 import { rng } from './paint'
 import { CAM, PALETTES, RAIL, SILL, WIN, makeView, paletteForHour, project, type PalId, type Palette, type View } from './scene'
-import { CAT } from './paint'
+import { CAT, extras } from './paint'
+import { offer } from './share'
 import { audio } from './AudioEngine'
 import { act, track } from './analytics'
 
@@ -53,6 +54,8 @@ export interface GameApi {
   dispose: () => void
   /** seconds by the window since the first touch */
   sec: () => number
+  /** a portal visit: from void, the first opening is the rain view with one sock on the line; from knock, one soft puff */
+  arrive?: (how: 'rain' | 'puff') => void
 }
 
 interface ToyHarness {
@@ -110,7 +113,7 @@ export function startGame(canvas: HTMLCanvasElement, cb: Callbacks): GameApi {
   let palId: PalId = paletteForHour(hour)
   // a link's view (?v=1..5): its event plays on the first open; 4 brings the sunset, 5 the night
   const vq = Number(q.get('v'))
-  const linkView: View0 | null = Number.isInteger(vq) && vq >= 1 && vq <= 5 ? VIEWS[vq] : null
+  let linkView: View0 | null = Number.isInteger(vq) && vq >= 1 && vq <= 5 ? VIEWS[vq] : null
   if (linkView === 'sunset') palId = 'golden'
   if (linkView === 'moon') palId = 'night'
   if (shot === 'billow' || shot === 'floor' || shot === 'og' || shot === 'sunset') palId = 'golden'
@@ -1196,7 +1199,11 @@ export function startGame(canvas: HTMLCanvasElement, cb: Callbacks): GameApi {
     const speed = performance.now() - lastMove < 80 ? handVel : 0
     release(dn.moved && pulled > 0.03)
     if (!dn.moved && performance.now() - dn.t < 350) {
-      if (onCat(dn.i)) poke()
+      if (onCat(dn.i)) {
+        poke()
+        // the cat's shadow is a portal to purr: the 2nd poke may show the bubble beside it
+        offer('silk', 'cat', () => (L.catHere && openness() <= 0.6 ? (project(view, CAT.x, 0, CAT.z + 0.32).slice(0, 2) as [number, number]) : null))
+      }
       return
     }
     L.drags++
@@ -1216,6 +1223,23 @@ export function startGame(canvas: HTMLCanvasElement, cb: Callbacks): GameApi {
 
   return {
     sec: secNow,
+    arrive(how) {
+      if (how === 'rain') {
+        if (!L.opens) linkView = 'rain'
+        import('./sock').then((m) => {
+          extras.sock = m.drawSock
+          r.dropOutside()
+        }, () => {})
+      } else if (!reduced)
+        setTimeout(() => {
+          // one soft puff into the middle of the curtain, as a tap beside it does
+          const d = CAM[1] - 0.15
+          puff.x = CAM[0] + ((innerWidth * 0.5 - view.cx) * d) / view.f
+          puff.z = CAM[2] - ((innerHeight * 0.5 - view.cy) * d) / view.f
+          puff.until = t + 0.15
+          audio.puff()
+        }, 1400)
+    },
     dispose: () => {
       document.removeEventListener('visibilitychange', onVis)
       disposed = true
