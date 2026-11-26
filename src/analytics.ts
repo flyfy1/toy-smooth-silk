@@ -21,6 +21,7 @@ const TITLES: Record<ToyId, string> = {
   pour: 'Toy · Perfect Pour',
   stamp: 'Toy · Rubber Stamp',
   zip: 'Toy · Zip It',
+  silk: 'Toy · Smooth as Silk',
 }
 
 type W = Window & { dataLayer?: unknown[] }

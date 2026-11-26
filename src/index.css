@@ -5,7 +5,7 @@ html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #05050c;
+  background: #F3EADB;
   overscroll-behavior: none;
 }
 body {
