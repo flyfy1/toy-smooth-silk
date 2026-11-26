@@ -1,0 +1,68 @@
+# Smooth as Silk
+
+> A sheer silk curtain at an open window, lit by whatever time it is where you are. Drag it and it tents toward you and catches the light; let go and it swings back in one long wave. The window's shadow bends over every fold, and there is a cat behind it. A tiny calming toy, no sign-up.
+
+Smooth as Silk (丝滑 (zh-CN), Pura Seda (es), Tout en Soie (fr), するするシルク (ja)) is a free browser toy at https://silk.integ.life/ by Integ Life. It opens straight into play: no sign-up, no download, no ads, no tutorial. It works with a mouse or a touchscreen on phones, tablets and computers.
+
+## How to play
+
+1. Put a finger or the mouse on the curtain and drag. The silk follows, comes out toward you and catches the light along its threads.
+2. Let go and it swings back in one long wave and settles. Pull it firmly sideways and the rings slide along the rail: that is how you open and close it.
+3. Tap beside the curtain to blow a puff of air at it. Tap the cat-shaped shadow on the silk and the cat bats back.
+4. The light follows the clock on your device: morning, afternoon, sunset or night. Open the curtain and something is usually going on outside: the cat, the neighbour opposite, rain on the washing, a sunset, the moon.
+
+## Facts
+
+- URL: https://silk.integ.life/
+- Price: free
+- Platforms: any modern web browser (desktop and mobile)
+- Languages: English, 简体中文 (Simplified Chinese), Español, Français and 日本語 (Japanese), picked from the browser language (default English)
+- Sound: synthesised live with the Web Audio API; vibration on Android
+- Made by: Integ Life (https://integ.life/), first published 2026-11-26
+
+## FAQ
+
+**Is this a real cloth simulation?**
+Yes. The curtain is a grid of about 1,450 points held together by constraints and solved several times per frame in your browser, with a breeze pushing on it. It is drawn with WebGL, so it needs a browser with WebGL turned on.
+
+**Why does the light change?**
+The scene follows the clock on your device: dawn, day, late afternoon, dusk and night each have their own light. At night the silk is lit by a lamp from inside the room.
+
+**What is the shadow on the curtain?**
+The window's glazing bars and whatever is on the sill, thrown onto the silk by the sun behind it. One of the things on the sill is a cat. Poke it.
+
+**Who is the neighbour?**
+Someone across the way with the same idea. Open the curtain at the wrong moment and you are both looking.
+
+**Can I make it stop moving?**
+No. There is always a little breeze.
+
+**Is Smooth as Silk free?**
+Yes. It is free, with no sign-up, no download and no ads. It runs in any modern browser on phones, tablets and computers.
+
+**Does it have sound and vibration?**
+Yes. The rustle of the silk, the curtain rings, the wind chime, the rain and the cicadas are synthesised live with the Web Audio API; there are no audio files. It is a quiet toy. On Android phones the rings are also a fine tick of vibration; iPhone browsers do not support web vibration.
+
+**Which languages does it support?**
+English, 简体中文 (Simplified Chinese), Español, Français and 日本語 (Japanese). The language is picked automatically from your browser settings; any other language falls back to English.
+
+**Who made it?**
+Integ Life (integ.life). Smooth as Silk is one of twelve small stress-relief toys, together with Charge Burst, Void Harvest, Glass Smash, Chain Pop, Knock on Wood, Lap Cat, Squishy Bun, Scratch That, Peel Off, Give It a Twirl, Tablecloth Trick. More games are at games.integ.life.
+
+**Is any personal data collected?**
+No account and no personal data. At most, anonymous usage statistics (page views and play counts) are collected.
+
+## Related
+
+- [Charge Burst](https://charge.integ.life/): Hold to annoy a pufferfish until it puffs up and blows its spines off.
+- [Void Harvest](https://void.integ.life/): Your cursor is a black hole: swallow the socks, receipts, client emails and Monday. Sometimes it gives one sock back.
+- [Glass Smash](https://smash.integ.life/): Smash a pane of glass with the word you hate written on it.
+- [Chain Pop](https://pop.integ.life/): A sheet of parcel bubble wrap that never runs out. One bubble refuses to pop.
+- [Knock on Wood](https://knock.integ.life/): Tap a wooden fish. Merit +1.
+- [Lap Cat](https://purr.integ.life/): Pet a soft, purring cat on your screen. Mind the belly.
+- [Squishy Bun](https://squish.integ.life/): Squeeze a soft mochi bun. It slowly forgives you.
+- [Scratch That](https://scratch.integ.life/): Scratch the silver off a card. Win a nap.
+- [Peel Off](https://peel.integ.life/): Peel the film off a brand-new phone. Then try to put the film down.
+- [Give It a Twirl](https://twirl.integ.life/): A new skirt on a dress form. Swipe to spin it and watch the hem fly out flat.
+- [Tablecloth Trick](https://yoink.integ.life/): Whip a silk tablecloth out from under Mum's bowls. Fast, or everything goes with it.
+- [Integ Games](https://games.integ.life/): more browser games
