@@ -91,6 +91,10 @@ export interface Palette {
   /** multiplier on the wall and floor bakes */
   room: V3
   night: boolean
+  /** the window shadow on the silk: blur distances (sharp to soft, soft to wide) and a cap on the wide blur */
+  blur?: [number, number, number, number]
+  /** the light through the silk, if not sunK (night: the city's glow behind the window) */
+  silkSunK?: number
 }
 
 const hex = (h: string): V3 => [parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255]
@@ -137,6 +141,8 @@ export const PALETTES: Record<PalId, Palette> = {
     fillK: 0.3,
     room: [1.02, 0.9, 0.78],
     night: false,
+    // a low sun travels further to the silk: crisper edges, so the bars and the cat still read in a billow
+    blur: [0.35, 0.6, 1.0, 0.3],
   },
   dusk: {
     id: 'dusk',
@@ -163,6 +169,8 @@ export const PALETTES: Record<PalId, Palette> = {
     fillK: 1.0,
     room: [0.62, 0.52, 0.5],
     night: true,
+    silkSunK: 0.24,
+    blur: [0.25, 0.4, 0.7, 0.4],
   },
 }
 

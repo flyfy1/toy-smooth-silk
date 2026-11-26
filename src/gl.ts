@@ -78,7 +78,7 @@ void main(){ vP=aP; vT=aT; vN=aN; vU=aU; vV=aV; vKB=aKB; gl_Position=uVP*vec4(aP
 const CLOTH_FS = HEAD + `
 uniform sampler2D uPat; uniform sampler2D uMask;
 uniform vec3 uCam; uniform vec3 uLs; uniform vec3 uLf; uniform vec3 uSunCol; uniform vec3 uFillCol;
-uniform float uSunK; uniform float uFillK; uniform float uTransK; uniform vec4 uMaskR; uniform vec3 uBlurD; uniform float uDebug;
+uniform float uSunK; uniform float uFillK; uniform float uTransK; uniform vec4 uMaskR; uniform vec4 uBlurD; uniform float uDebug;
 varying vec3 vP; varying vec2 vT; varying vec3 vN; varying vec3 vU; varying vec3 vV; varying vec2 vKB;
 float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
 float shoulder(float x){ return x<.82?x:.82+.18*(1.-exp(-(x-.82)/.18)); }
@@ -116,7 +116,8 @@ void main(){
   vec2 mu=vec2((Q.x-uMaskR.x)*uMaskR.z,1.-(Q.z-uMaskR.y)*uMaskR.w);
   vec3 m=texture2D(uMask,mu).rgb;
   float inR=step(0.,mu.x)*step(mu.x,1.)*step(0.,mu.y)*step(mu.y,1.);
-  float mk=mix(mix(m.r,m.g,smoothstep(uBlurD.x,uBlurD.y,travel)),m.b,smoothstep(uBlurD.y,uBlurD.z,travel))*inR;
+  // sharp near the glass, softer further out; the wide blur is capped (uBlurD.w) so a billow keeps its shadows
+  float mk=mix(mix(m.r,m.g,smoothstep(uBlurD.x,uBlurD.y,travel)),m.b,min(uBlurD.w,smoothstep(uBlurD.y,uBlurD.z,travel)))*inR;
   float t=.85*clamp(dot(-N,uLs),0.,1.)*exp(-.9*(layers-1.));
   vec3 trans=vec3(1.,.945,.84)*uSunCol*uSunK*t*mk*mix(vec3(1.),base,.6)*(1.-.15*stripe);
   col+=trans*uTransK;
@@ -580,11 +581,11 @@ export class Renderer {
       gl.uniform3fv(c.u.uLf, pal.fill)
       gl.uniform3fv(c.u.uSunCol, pal.sunCol)
       gl.uniform3fv(c.u.uFillCol, pal.night ? pal.fillCol.map((v) => 0.62 * v + 0.38) : pal.fillCol.map((v) => v * expo))
-      gl.uniform1f(c.u.uSunK, pal.sunK)
+      gl.uniform1f(c.u.uSunK, pal.silkSunK ?? pal.sunK)
       gl.uniform1f(c.u.uFillK, pal.fillK)
       gl.uniform1f(c.u.uTransK, s.transK ?? 2.2)
       gl.uniform4f(c.u.uMaskR, MASK.x0, MASK.z0, 1 / (MASK.x1 - MASK.x0), 1 / (MASK.z1 - MASK.z0))
-      gl.uniform3f(c.u.uBlurD, 0.2, 0.33, 0.55)
+      gl.uniform4fv(c.u.uBlurD, pal.blur ?? [0.2, 0.33, 0.55, 0.6])
       gl.uniform1f(c.u.uDebug, s.debug ?? 0)
       // one pass, triangles sorted back to front (README asks for back faces then front faces; with folds
       // that turn edge-on, a far layer's front faces then overdraw a near layer's back faces in a sawtooth)

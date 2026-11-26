@@ -25,7 +25,7 @@ const G = 9.81
 const MU = 0.2
 /** wind coupling k(|W|) = W_A + W_B |W| (see step) */
 const W_A = 0.012
-const W_B = 0.11
+const W_B = 0.14
 
 type Shot = 'closed' | 'billow' | 'drag' | 'open' | 'night' | 'floor' | 'release'
 
@@ -98,6 +98,11 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void, onNoGL
   const RING_LAG = num('lag', RING_LAG_D)
   const LRA_SLACK = num('lra', 1.04)
   const CAIR = num('air', C_AIR)
+  /** right after a release the air and damping ease off, so the silk swings back in one long wave */
+  const REL_K = num('rd', 0.15)
+  const REL_T = num('rt', 3)
+  const WB = num('wb', W_B)
+  let relAt = -1e9
   const cloth = new Cloth({ cols: COLS, rows: ROWS, du: DU, dv: DV, shear: num('sh', 0.3), bendU: num('bu', 4), bendV: num('bv', 4) })
   const RU = 2,
     RV = 3
@@ -241,6 +246,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void, onNoGL
   }
   function release() {
     for (const d of hand.driven) cloth.w[d.i] = cloth.w0[d.i]
+    if (hand.on) relAt = t
     hand.on = false
     hand.driven = []
   }
@@ -258,6 +264,11 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void, onNoGL
     const nrm = mesh.data
     const wb = gustW()
     lastWb = wb
+    // air and damping, eased off for a moment after a release
+    const re = Math.min(1, Math.max(0, (t - relAt) / REL_T))
+    const relK = REL_K + (1 - REL_K) * re * re * (3 - 2 * re)
+    const cAir = CAIR * relK
+    const dm = 1 - C_DAMP * relK * (dt / S)
     const ph = prevHand
     handSpeed = hand.on ? Math.abs(hand.tx - ph.x) / dt : 0
     for (let sub = 0; sub < S; sub++) {
@@ -332,7 +343,7 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void, onNoGL
           // the breeze's push grows faster than linearly with its speed (drag goes as v^2): a 0.35 m/s
           // breeze only stirs the silk, a 2.8 m/s gust stands it 0.25 to 0.5 m into the room
           const ws = wb * (0.6 + 0.4 * n2)
-          const kw = W_A + W_B * ws
+          const kw = W_A + WB * ws
           Wx = 0.15 * n1 * near * kw
           Wy = ws * near * kw
         }
@@ -341,11 +352,10 @@ export function startGame(canvas: HTMLCanvasElement, onFirst: () => void, onNoGL
           ny = nrm[fi + 1],
           nz = nrm[fi + 2]
         const rel = (Wx - vx) * nx + (Wy - vy) * ny + (0 - vz) * nz
-        const a = CAIR * rel * h
+        const a = cAir * rel * h
         vx += a * nx
         vy += a * ny
         vz += a * nz
-        const dm = 1 - C_DAMP * h
         vx *= dm
         vy *= dm
         vz *= dm
