@@ -1,0 +1,27 @@
+# Smooth as Silk
+
+> A sheer silk curtain at an open window, lit by whatever time it is where you are. Drag it and it tents toward you and catches the light; let go and it swings back in one long wave. The window's shadow bends over every fold, and there is a cat behind it. A tiny calming toy, no sign-up.
+
+Smooth as Silk (丝滑 (zh-CN), Pura Seda (es), Tout en Soie (fr), するするシルク (ja)) is a free browser toy at https://silk.integ.life/ by Integ Life. It opens straight into play: no sign-up, no download, no ads, no tutorial. It works with a mouse or a touchscreen on phones, tablets and computers.
+
+## How to play
+
+1. Put a finger or the mouse on the curtain and drag. The silk follows, comes out toward you and catches the light along its threads.
+2. Let go and it swings back and settles. Pull it firmly sideways and the rings slide along the rail: that is how you open and close it.
+3. Tap beside the curtain to blow a puff of air at it. Tap the cat-shaped shadow and see what happens.
+4. The light is your own local time: morning, afternoon, sunset or night. Different things happen outside when you open the curtain.
+
+## FAQ
+
+- Is this a real cloth simulation? Yes. The curtain is a grid of about 1,450 points held together by constraints and solved several times per frame in your browser, with a breeze pushing on it. It is drawn with WebGL.
+- Why does the light change? The scene follows the clock on your device: dawn, day, late afternoon, dusk and night each have their own light. At night the silk is lit by a lamp from inside the room.
+- What is the shadow on the curtain? The window's glazing bars and whatever is on the sill, thrown onto the silk by the sun behind it. One of the things on the sill is a cat.
+- Can I make it stop moving? No. There is always a little breeze.
+- Does it have sound? Yes. The rustle of the silk, the curtain rings, the wind chime and the cicadas are synthesised live with the Web Audio API; there are no audio files. It is a quiet toy. On Android phones the rings are also a fine tick of vibration.
+
+## Facts
+
+- URL: https://silk.integ.life/
+- Price: free
+- Platforms: any modern web browser with WebGL (desktop and mobile)
+- Languages: English, 简体中文 (Simplified Chinese), Español, Français, 日本語

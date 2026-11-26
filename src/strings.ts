@@ -1,6 +1,6 @@
 // Smooth as Silk: this toy's own interface text in five languages (toy-specific, not a shared file).
 // The text every toy shares (names for the More menu, Share, About) lives in i18n.ts; this toy's name
-// stays here until it is live. Lines for the cat, the neighbour, Mum and the clock arrive in phase 3.
+// stays here until it is live. Lines for the cat, the neighbour, Mum and the clock: spec section 7.5; the landing tag: section 8.
 
 const en = {
   name_silk: "Smooth as Silk",
@@ -8,6 +8,20 @@ const en = {
   hint_silk: "Drag the curtain. Let go.",
   share_silk: "There is a window here with a silk curtain. Give it a pull:",
   silk_nogl: "This toy needs WebGL, and this browser has it switched off.",
+  silk_cat_poke: "There is a cat behind the curtain.",
+  silk_cat_seen: "It was here the whole time.",
+  silk_neighbour: "The neighbour opened theirs too. 0.8 seconds of eye contact.",
+  silk_neighbour_both: "You both closed them. An understanding.",
+  silk_mum: "Mum",
+  silk_mum_rain: "It's raining! The washing!",
+  silk_rain_closed: "The washing is still out there.",
+  silk_mum_sun: "Close it. The sun will ruin the floor.",
+  silk_mum_ok: "Good.",
+  silk_sunset: "A sunset. Your phone would not do it justice.",
+  silk_moon: "The moon is out tonight.",
+  silk_moon_late: "It is {h} in the morning. The moon is up too.",
+  silk_time: "By the window · {t}",
+  silk_tag: "Someone took time off to watch a curtain. This window is yours.",
 }
 
 const zhCN: typeof en = {
@@ -16,6 +30,20 @@ const zhCN: typeof en = {
   hint_silk: "拉一下窗帘，再松手",
   share_silk: "这儿有一扇窗，窗帘是真丝的。拉一下：",
   silk_nogl: "这个玩具需要 WebGL，这个浏览器没开。",
+  silk_cat_poke: "窗帘后面有猫。",
+  silk_cat_seen: "它一直在这儿。",
+  silk_neighbour: "对面也刚好拉开。对视了 0.8 秒。",
+  silk_neighbour_both: "你也拉上了。很有默契。",
+  silk_mum: "妈",
+  silk_mum_rain: "下雨了！收衣服！",
+  silk_rain_closed: "衣服还在外面。",
+  silk_mum_sun: "拉上，地板要晒坏了。",
+  silk_mum_ok: "嗯。",
+  silk_sunset: "晚霞。手机拍不出来。",
+  silk_moon: "今晚有月亮。",
+  silk_moon_late: "凌晨 {h} 点了。月亮也没睡。",
+  silk_time: "在窗边 · {t}",
+  silk_tag: "有人请了假在看窗帘。这扇窗留给你。",
 }
 
 const es: typeof en = {
@@ -24,6 +52,20 @@ const es: typeof en = {
   hint_silk: "Arrastra la cortina y suéltala",
   share_silk: "Aquí hay una ventana con una cortina de seda. Tira de ella:",
   silk_nogl: "Este juguete necesita WebGL y este navegador lo tiene desactivado.",
+  silk_cat_poke: "Hay un gato detrás de la cortina.",
+  silk_cat_seen: "Llevaba ahí todo el rato.",
+  silk_neighbour: "El vecino de enfrente también ha abierto. 0,8 segundos de contacto visual.",
+  silk_neighbour_both: "Los dos habéis cerrado. Hay entendimiento.",
+  silk_mum: "Mamá",
+  silk_mum_rain: "¡Que llueve! ¡La ropa!",
+  silk_rain_closed: "La ropa sigue fuera.",
+  silk_mum_sun: "Ciérrala, que el sol estropea el suelo.",
+  silk_mum_ok: "Así.",
+  silk_sunset: "Un atardecer. En la foto no va a salir igual.",
+  silk_moon: "Esta noche hay luna.",
+  silk_moon_late: "Son las {h} de la madrugada. La luna tampoco duerme.",
+  silk_time: "En la ventana · {t}",
+  silk_tag: "Alguien se ha tomado un rato para mirar una cortina. Esta ventana es tuya.",
 }
 
 const fr: typeof en = {
@@ -32,6 +74,20 @@ const fr: typeof en = {
   hint_silk: "Tirez le rideau, puis lâchez",
   share_silk: "Il y a ici une fenêtre avec un rideau de soie. Tirez-le :",
   silk_nogl: "Ce jouet a besoin de WebGL, et ce navigateur l'a désactivé.",
+  silk_cat_poke: "Il y a un chat derrière le rideau.",
+  silk_cat_seen: "Il était là depuis le début.",
+  silk_neighbour: "Le voisin d'en face a ouvert aussi. 0,8 seconde de regard croisé.",
+  silk_neighbour_both: "Vous avez fermé tous les deux. On se comprend.",
+  silk_mum: "Maman",
+  silk_mum_rain: "Il pleut ! Le linge !",
+  silk_rain_closed: "Le linge est toujours dehors.",
+  silk_mum_sun: "Ferme, le soleil va abîmer le parquet.",
+  silk_mum_ok: "Voilà.",
+  silk_sunset: "Un coucher de soleil. En photo, ça ne rendra rien.",
+  silk_moon: "Il y a de la lune ce soir.",
+  silk_moon_late: "Il est {h} h du matin. La lune ne dort pas non plus.",
+  silk_time: "À la fenêtre · {t}",
+  silk_tag: "Quelqu'un a pris un moment pour regarder un rideau. Cette fenêtre est pour vous.",
 }
 
 const ja: typeof en = {
@@ -40,6 +96,20 @@ const ja: typeof en = {
   hint_silk: "カーテンを引いて、はなす",
   share_silk: "ここに窓がある。カーテンは絹。引いてみて：",
   silk_nogl: "このおもちゃには WebGL が必要ですが、このブラウザでは無効になっています。",
+  silk_cat_poke: "カーテンの向こうに猫がいる。",
+  silk_cat_seen: "ずっとここにいた。",
+  silk_neighbour: "向かいの人も同時に開けた。目が合って 0.8 秒。",
+  silk_neighbour_both: "あなたも閉めた。以心伝心。",
+  silk_mum: "母",
+  silk_mum_rain: "雨よ！洗濯物！",
+  silk_rain_closed: "洗濯物はまだ外にある。",
+  silk_mum_sun: "閉めて。床が日に焼けるから。",
+  silk_mum_ok: "そう。",
+  silk_sunset: "夕焼け。スマホでは写らないやつ。",
+  silk_moon: "今夜は月が出ている。",
+  silk_moon_late: "午前 {h} 時。月もまだ起きている。",
+  silk_time: "窓辺で · {t}",
+  silk_tag: "カーテンを眺めるために休んだ人がいます。この窓はあなたに。",
 }
 
 export default { en, 'zh-CN': zhCN, es, fr, ja }

@@ -70,6 +70,7 @@ export type ActKind =
   | 'squeeze' | 'stretch' // squish
   | 'card' // scratch
   | 'peel_start' | 'peel_done' | 'relaid' | 'cling_shake' | 'cling_tap' // peel
+  | 'open' | 'cat' | 'puff' // silk (and 'drag', as void)
 
 let eng: ((kind: string) => void) | null = null
 const queued: string[] = []

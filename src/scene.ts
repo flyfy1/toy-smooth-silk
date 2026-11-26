@@ -128,6 +128,8 @@ export const PALETTES: Record<PalId, Palette> = {
     fillK: 0.35,
     room: [1, 1, 1],
     night: false,
+    // the cat's shadow stays crisp a little further out (a bat bumps the silk 8 cm toward the room)
+    blur: [0.28, 0.45, 0.75, 0.6],
   },
   golden: {
     id: 'golden',

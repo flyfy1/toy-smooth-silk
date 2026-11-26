@@ -4,7 +4,7 @@
 // the curtain's planar shadow into a quarter-resolution buffer, a 5-tap blur, and dust motes.
 
 import { CAM, MASK, RAIL, SILL, viewProj, type Palette, type View } from './scene'
-import { CHIMESPRITE, FLOOR, OUT, SILLSPRITE, WALL, maskPixels, paintBrass, paintChime, paintFloor, paintOutside, paintSillThings, paintWall, patternPixels } from './paint'
+import { CHIMESPRITE, FLOOR, NEIGH, OUT, SILLSPRITE, WALL, maskPixels, paintNeighbour, paintBrass, paintChime, paintFloor, paintOutside, paintSillThings, paintWall, patternPixels } from './paint'
 import type { PalId } from './scene'
 
 const HEAD = `#ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -16,11 +16,11 @@ precision mediump float;
 
 const QUAD_VS = `
 attribute vec3 aP; attribute vec2 aT;
-uniform mat4 uVP; varying vec2 vT; varying vec3 vP;
-void main(){ vT=aT; vP=aP; gl_Position=uVP*vec4(aP,1.); }`
+uniform mat4 uVP; uniform vec3 uOff; varying vec2 vT; varying vec3 vP;
+void main(){ vT=aT; vP=aP+uOff; gl_Position=uVP*vec4(vP,1.); }`
 
 const QUAD_FS = HEAD + `
-uniform sampler2D uTex; uniform vec3 uTint; uniform float uAlpha; uniform float uMode; uniform vec4 uLamp;
+uniform sampler2D uTex; uniform vec3 uTint; uniform float uAlpha; uniform float uMode; uniform vec4 uLamp; uniform vec2 uRain;
 varying vec2 vT; varying vec3 vP;
 float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
 void main(){
@@ -35,6 +35,16 @@ void main(){
   } else c=texture2D(uTex,vT);
   if(c.a<.02) discard;
   vec3 col=c.rgb*uTint;
+  if(uRain.x>0.){
+    // rain outside: grey it down, then thin slanted streaks falling (about 60 in view)
+    col=mix(col,vec3(dot(col,vec3(.3,.5,.2)))*vec3(.82,.86,.92),.55*uRain.x)*(1.-.28*uRain.x);
+    vec2 q=vec2(vT.x*60.+vT.y*6.,vT.y*3.+uRain.y*2.6);
+    float lane=floor(q.x);
+    float r1=hash(vec2(lane,3.1));
+    float y=fract(q.y+r1*7.);
+    float streak=smoothstep(.5,.0,abs(fract(q.x)-.5)*6.)*smoothstep(.0,.12,y)*smoothstep(.34,.12,y)*step(.35,r1);
+    col=mix(col,vec3(.9,.93,.97),streak*.55*uRain.x);
+  }
   float ld=distance(vP,uLamp.xyz);
   col*=mix(1.,.5+1.5/(1.+ld*ld*.9),uLamp.w);
   col+=(hash(gl_FragCoord.xy)-.5)/255.;
@@ -177,6 +187,17 @@ export interface FrameState {
   motes: Float32Array | null
   debug?: number
   transK?: number
+  /** the cat's sprite: pose, fade, and how far it has walked along the sill */
+  cat?: { pose: 'cat' | 'look' | 'blink'; alpha: number; dx: number; dz: number }
+  /** the neighbour's curtain opposite, 0 shut to 1 open */
+  neigh?: number
+  /** rain outside 0..1 and the clock for its streaks */
+  rain?: number
+  time?: number
+  /** the view's colour (rain greys it, a sunset deepens it) and the room's exposure */
+  outTint?: [number, number, number]
+  expo?: number
+  moteK?: number
 }
 
 export class Renderer {
@@ -185,7 +206,10 @@ export class Renderer {
   private tex: Record<string, WebGLTexture> = {}
   private outside: Partial<Record<PalId, WebGLTexture>> = {}
   private sillTex: Partial<Record<PalId, WebGLTexture>> = {}
-  private catTex: Partial<Record<PalId, WebGLTexture>> = {}
+  private catTex: Partial<Record<string, WebGLTexture>> = {}
+  private maskKey = '0,0,1'
+  private maskCache: Record<string, Uint8Array> = {}
+  private neighK = -1
   private bufs: Record<string, WebGLBuffer> = {}
   private quads: Record<string, { buf: WebGLBuffer; tex: string }> = {}
   private fb: { f: WebGLFramebuffer; t: WebGLTexture }[] = []
@@ -298,7 +322,9 @@ export class Renderer {
     this.bufs.quad = gl.createBuffer()!
     // textures
     this.tex.pat = this.texRaw(patternPixels(), 512, 512, true, true)
-    this.tex.mask = this.texRaw(maskPixels(), 256, 256, false, false)
+    this.tex.mask = this.texRaw(this.maskPx(this.maskKey), 256, 256, false, false)
+    this.tex.neigh = this.texRaw(new Uint8Array([0, 0, 0, 0]), 1, 1, false, false)
+    this.neighK = -1
     this.tex.wall = this.texCanvas(paintWall(), true)
     this.tex.floor = this.texCanvas(paintFloor(), true)
     this.tex.chime = this.texCanvas(paintChime(), false)
@@ -318,6 +344,7 @@ export class Renderer {
     wq('sillFront', 'white', vquad(SILL.x0, SILL.x1, sd, sz - SILL.thick, sz))
     wq('sillThings', 'sill', vquad(SILLSPRITE.x0, SILLSPRITE.x1, 0.05, SILLSPRITE.z0, SILLSPRITE.z1))
     wq('cat', 'cat', vquad(SILLSPRITE.x0, SILLSPRITE.x1, 0.051, SILLSPRITE.z0, SILLSPRITE.z1))
+    wq('neigh', 'neigh', vquad(NEIGH.x0, NEIGH.x1, OUT.y + 0.002, NEIGH.z0, NEIGH.z1))
     wq('chime', 'chime', vquad(CHIMESPRITE.x0, CHIMESPRITE.x1, 0.04, CHIMESPRITE.z0, CHIMESPRITE.z1))
     wq('rail', 'white', vquad(RAIL.x0, RAIL.x1, RAIL.y + 0.012, RAIL.z - 0.011, RAIL.z + 0.011))
     this.fb = []
@@ -363,11 +390,31 @@ export class Renderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap)
   }
 
-  /** the mask again (the cat moved or raised a paw) */
-  setMask(paw: number) {
+  private maskPx(key: string) {
+    if (!this.maskCache[key]) {
+      const [paw, flick, cat] = key.split(',').map(Number)
+      this.maskCache[key] = maskPixels(paw, flick, !!cat)
+    }
+    return this.maskCache[key]
+  }
+  /** the mask again (the cat raised a paw, flicked its tail, left or came back); variants are cached */
+  setMask(paw: number, flick: number, cat: boolean) {
+    const key = `${paw},${flick},${cat ? 1 : 0}`
+    if (key === this.maskKey) return
+    this.maskKey = key
     const gl = this.gl
     gl.bindTexture(gl.TEXTURE_2D, this.tex.mask)
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 256, 256, 0, gl.RGBA, gl.UNSIGNED_BYTE, maskPixels(paw))
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 256, 256, 0, gl.RGBA, gl.UNSIGNED_BYTE, this.maskPx(key))
+  }
+  /** the neighbour's curtain opposite, 0 shut to 1 open (repainted only when it moves) */
+  private setNeigh(pal: Palette, k: number) {
+    const q = Math.round(k * 40) / 40
+    if (q === this.neighK) return
+    this.neighK = q
+    const gl = this.gl
+    gl.bindTexture(gl.TEXTURE_2D, this.tex.neigh)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, paintNeighbour(pal, q))
+    this.texParams(false, false)
   }
 
   resize(w: number, h: number, dpr: number, view: View) {
@@ -400,8 +447,12 @@ export class Renderer {
   private palTex(pal: Palette) {
     if (!this.outside[pal.id]) this.outside[pal.id] = this.texCanvas(paintOutside(pal), true)
     if (!this.sillTex[pal.id]) this.sillTex[pal.id] = this.texCanvas(paintSillThings(pal, 'pot'), true)
-    if (!this.catTex[pal.id]) this.catTex[pal.id] = this.texCanvas(paintSillThings(pal, 'cat'), true)
-    return { out: this.outside[pal.id]!, sill: this.sillTex[pal.id]!, cat: this.catTex[pal.id]! }
+    return { out: this.outside[pal.id]!, sill: this.sillTex[pal.id]! }
+  }
+  private catSprite(pal: Palette, pose: 'cat' | 'look' | 'blink') {
+    const k = pal.id + pose
+    if (!this.catTex[k]) this.catTex[k] = this.texCanvas(paintSillThings(pal, pose), true)
+    return this.catTex[k]!
   }
 
   private bindQuadAttribs(p: Prog, buf: WebGLBuffer) {
@@ -425,8 +476,10 @@ export class Renderer {
     if (gl.isContextLost()) return
     const pal = s.pal
     const vp = viewProj(this.view)
-    const { out, sill, cat } = this.palTex(pal)
+    const { out, sill } = this.palTex(pal)
+    const cat = this.catSprite(pal, s.cat?.pose ?? 'cat')
     const tx = { ...this.tex, out, sill, cat } as Record<string, WebGLTexture>
+    if (s.neigh !== undefined && s.neigh > 0) this.setNeigh(pal, s.neigh)
     const room = pal.room
     const lamp = pal.night ? pal.fillCol.map((v) => 0.55 * v + 0.45) : [1, 1, 1]
     const rl = (k: number): [number, number, number] => [room[0] * lamp[0] * k, room[1] * lamp[1] * k, room[2] * lamp[2] * k]
@@ -507,8 +560,13 @@ export class Renderer {
       gl.uniform1f(q.u.uMode, mode)
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     }
-    const expo = 1 + 0.06 * s.open
-    quad('out', [expo, expo, expo])
+    const expo = (1 + 0.06 * s.open) * (s.expo ?? 1)
+    gl.uniform3f(q.u.uOff, 0, 0, 0)
+    gl.uniform2f(q.u.uRain, s.rain ?? 0, s.time ?? 0)
+    const ot = s.outTint ?? [1, 1, 1]
+    quad('out', [expo * ot[0], expo * ot[1], expo * ot[2]])
+    gl.uniform2f(q.u.uRain, 0, 0)
+    if (s.neigh !== undefined && s.neigh > 0) quad('neigh', [expo * ot[0], expo * ot[1], expo * ot[2]])
     quad('wall', rl(0.93 * expo))
     // the floor
     {
@@ -544,7 +602,12 @@ export class Renderer {
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
     gl.depthMask(false)
     quad('sillThings', [1, 1, 1])
-    if (s.open > 0.02) quad('cat', [1, 1, 1], Math.min(1, s.open * 1.5))
+    const ca = Math.min(1, s.open * 1.5) * (s.cat?.alpha ?? 1)
+    if (ca > 0.02) {
+      gl.uniform3f(q.u.uOff, s.cat?.dx ?? 0, 0, s.cat?.dz ?? 0)
+      quad('cat', [1, 1, 1], ca)
+      gl.uniform3f(q.u.uOff, 0, 0, 0)
+    }
     quad('chime', [1, 1, 1])
 
     // 3. the silk: lining side first, then the room side
@@ -626,7 +689,7 @@ export class Renderer {
       gl.uniformMatrix4fv(m.u.uVP, false, vp)
       gl.uniform1f(m.u.uPx, 2.2 * this.dpr * (this.view.f / 830) * 3.4)
       gl.uniform3fv(m.u.uCol, pal.sunCol)
-      gl.uniform1f(m.u.uK, 0.5 * s.open)
+      gl.uniform1f(m.u.uK, 0.5 * s.open * (s.moteK ?? 1))
       this.disableAll()
       gl.bindBuffer(gl.ARRAY_BUFFER, this.bufs.motes)
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, s.motes)

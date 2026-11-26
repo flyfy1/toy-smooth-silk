@@ -89,7 +89,7 @@ type Pt = (x: number, z: number) => [number, number]
 
 /** the cat, sitting on the sill with its back to the room, in world metres (x, z) */
 export const CAT = { x: -0.3, z: 0.75 }
-export function catPath(ctx: CanvasRenderingContext2D, P: Pt, paw = 0) {
+export function catPath(ctx: CanvasRenderingContext2D, P: Pt, paw = 0, flick = 0) {
   const { x, z } = CAT
   const m = (dx: number, dz: number) => P(x + dx, z + dz)
   ctx.beginPath()
@@ -112,10 +112,18 @@ export function catPath(ctx: CanvasRenderingContext2D, P: Pt, paw = 0) {
   ctx.closePath()
   // the tail: out to the right along the sill, then up in a hook
   ctx.moveTo(...m(0.1, 0.0))
-  ctx.bezierCurveTo(...m(0.18, -0.004), ...m(0.235, 0.0), ...m(0.25, 0.07))
-  ctx.bezierCurveTo(...m(0.258, 0.11), ...m(0.24, 0.135), ...m(0.222, 0.128))
-  ctx.bezierCurveTo(...m(0.212, 0.122), ...m(0.228, 0.1), ...m(0.226, 0.075))
-  ctx.bezierCurveTo(...m(0.22, 0.035), ...m(0.18, 0.024), ...m(0.1, 0.03))
+  if (flick) {
+    // the flick: the tip whips up and over toward the back
+    ctx.bezierCurveTo(...m(0.18, -0.004), ...m(0.22, 0.02), ...m(0.215, 0.11))
+    ctx.bezierCurveTo(...m(0.212, 0.16), ...m(0.18, 0.19), ...m(0.162, 0.178))
+    ctx.bezierCurveTo(...m(0.155, 0.17), ...m(0.19, 0.15), ...m(0.19, 0.1))
+    ctx.bezierCurveTo(...m(0.19, 0.05), ...m(0.17, 0.028), ...m(0.1, 0.03))
+  } else {
+    ctx.bezierCurveTo(...m(0.18, -0.004), ...m(0.235, 0.0), ...m(0.25, 0.07))
+    ctx.bezierCurveTo(...m(0.258, 0.11), ...m(0.24, 0.135), ...m(0.222, 0.128))
+    ctx.bezierCurveTo(...m(0.212, 0.122), ...m(0.228, 0.1), ...m(0.226, 0.075))
+    ctx.bezierCurveTo(...m(0.22, 0.035), ...m(0.18, 0.024), ...m(0.1, 0.03))
+  }
   ctx.closePath()
   if (paw) {
     // a raised paw (phase 3: the cat bats back)
@@ -189,7 +197,7 @@ function chimeStrip(ctx: CanvasRenderingContext2D, P: Pt, swing = 0) {
 // ---------- the window's light mask ----------
 
 /** 256 x 256 over MASK: R sharp, G blurred 0.02 m, B blurred 0.07 m. 1 where sunlight passes. */
-export function maskPixels(paw = 0): Uint8Array {
+export function maskPixels(paw = 0, flick = 0, cat = true): Uint8Array {
   const N = 256
   const c = canvas(N, N)
   const ctx = c.getContext('2d', { willReadFrequently: true })!
@@ -207,8 +215,10 @@ export function maskPixels(paw = 0): Uint8Array {
     const [qx, qy] = P(x1, z0)
     ctx.fillRect(px, py, qx - px, qy - py)
   }
-  catPath(ctx, P, paw)
-  ctx.fill()
+  if (cat) {
+    catPath(ctx, P, paw, flick)
+    ctx.fill()
+  }
   potPath(ctx, P)
   ctx.fill()
   ctx.beginPath()
@@ -378,8 +388,8 @@ export function paintOutside(pal: Palette): HTMLCanvasElement {
       const lit = night && r() < 0.45
       g.fillStyle = night ? (lit ? '#F6C977' : '#151829') : pal.id === 'golden' ? '#8E6A5A' : '#7C8C99'
       g.fillRect(p0, p1, q0 - p0, q1 - p1)
-      // the neighbour's own curtain (phase 3) in the second window of the second row
-      if (row === 1 && col === 1) {
+      // the neighbour's own curtain in the third window of the second row
+      if (row === 1 && col === 2) {
         g.fillStyle = night ? '#C9A97A' : '#E9E2D2'
         g.fillRect(p0, p1, (q0 - p0) * 0.5, q1 - p1)
         g.fillRect(p0 + (q0 - p0) * 0.5, p1, (q0 - p0) * 0.5, q1 - p1)
@@ -474,10 +484,11 @@ export function paintOutside(pal: Palette): HTMLCanvasElement {
 
 // ---------- the wall with its window, and the floor ----------
 
-export const WALL = { x0: -1.4, x1: 1.4, z0: 0, z1: 3.1 }
+// wide enough for a landscape screen (desktop, the og image) as well as a phone
+export const WALL = { x0: -4.4, x1: 4.4, z0: 0, z1: 3.1 }
 
 export function paintWall(): HTMLCanvasElement {
-  const ppm = 480
+  const ppm = 360
   const W = Math.round((WALL.x1 - WALL.x0) * ppm),
     H = Math.round((WALL.z1 - WALL.z0) * ppm)
   const c = canvas(W, H)
@@ -487,7 +498,7 @@ export function paintWall(): HTMLCanvasElement {
   g.fillStyle = '#F3EADB'
   g.fillRect(0, 0, W, H)
   // lime wash: soft mottling
-  for (let i = 0; i < 900; i++) {
+  for (let i = 0; i < 2400; i++) {
     const x = r() * W,
       y = r() * H,
       rad = 20 + r() * 90
@@ -600,10 +611,10 @@ export function paintWall(): HTMLCanvasElement {
   return c
 }
 
-export const FLOOR = { x0: -2, x1: 2, y0: 0, y1: 2.2 }
+export const FLOOR = { x0: -5.5, x1: 5.5, y0: 0, y1: 3.0 }
 
 export function paintFloor(): HTMLCanvasElement {
-  const ppm = 300
+  const ppm = 240
   const W = Math.round((FLOOR.x1 - FLOOR.x0) * ppm),
     H = Math.round((FLOOR.y1 - FLOOR.y0) * ppm)
   const c = canvas(W, H)
@@ -627,11 +638,11 @@ export function paintFloor(): HTMLCanvasElement {
       g.stroke()
     }
     // butt joints
-    let y = r() * 300
+    let y = r() * 0.8 * ppm
     while (y < H) {
       g.fillStyle = 'rgba(80,45,20,0.35)'
       g.fillRect(x, y, bw, 1.5)
-      y += 380 + r() * 400
+      y += (380 + r() * 400) * (ppm / 300)
     }
     g.fillStyle = 'rgba(70,40,18,0.45)'
     g.fillRect(x, 0, 1.6, H)
@@ -650,7 +661,7 @@ export function paintFloor(): HTMLCanvasElement {
 
 /** the sill things as one sprite over the window's lower half, seen from the room against the light */
 export const SILLSPRITE = { x0: -0.6, x1: 0.6, z0: 0.45, z1: 1.15 }
-export function paintSillThings(pal: Palette, what: 'pot' | 'cat'): HTMLCanvasElement {
+export function paintSillThings(pal: Palette, what: 'pot' | 'cat' | 'look' | 'blink'): HTMLCanvasElement {
   const ppm = 420
   const W = Math.round((SILLSPRITE.x1 - SILLSPRITE.x0) * ppm),
     H = Math.round((SILLSPRITE.z1 - SILLSPRITE.z0) * ppm)
@@ -659,8 +670,8 @@ export function paintSillThings(pal: Palette, what: 'pot' | 'cat'): HTMLCanvasEl
   const P: Pt = (x, z) => [(x - SILLSPRITE.x0) * ppm, (SILLSPRITE.z1 - z) * ppm]
   const night = pal.night
   // the cat, backlit: a dark warm ginger with a bright rim (its own sprite: it shows when the curtain opens)
-  if (what === 'cat') paintCat()
-  else paintPot()
+  if (what === 'pot') paintPot()
+  else paintCat()
   return c
   function paintCat() {
   catPath(g, P)
@@ -688,6 +699,38 @@ export function paintSillThings(pal: Palette, what: 'pot' | 'cat'): HTMLCanvasEl
   g.lineWidth = 2.5
   catPath(g, P)
   g.stroke()
+  if (what !== 'cat') {
+    // it has turned its head to look over its shoulder: two eyes and a nose (blink: the eyes are lines)
+    const [ex, ey] = P(CAT.x, CAT.z + 0.275)
+    const s = ppm * 0.001
+    g.fillStyle = night ? '#C9D98A' : '#D8E07A'
+    g.strokeStyle = '#2A1808'
+    g.lineWidth = 2
+    for (const dx of [-19, 19]) {
+      g.beginPath()
+      if (what === 'look') {
+        g.ellipse(ex + dx * s, ey, 9 * s, 7 * s, 0, 0, Math.PI * 2)
+        g.fill()
+        g.stroke()
+        g.fillStyle = '#1A1006'
+        g.beginPath()
+        g.ellipse(ex + dx * s, ey, 2.2 * s, 6 * s, 0, 0, Math.PI * 2)
+        g.fill()
+        g.fillStyle = night ? '#C9D98A' : '#D8E07A'
+      } else {
+        g.moveTo(ex + dx * s - 9 * s, ey)
+        g.quadraticCurveTo(ex + dx * s, ey + 5 * s, ex + dx * s + 9 * s, ey)
+        g.stroke()
+      }
+    }
+    g.fillStyle = '#E8A0A0'
+    g.beginPath()
+    g.moveTo(ex - 5 * s, ey + 16 * s)
+    g.lineTo(ex + 5 * s, ey + 16 * s)
+    g.lineTo(ex, ey + 22 * s)
+    g.closePath()
+    g.fill()
+  }
   }
   function paintPot() {
   // the pot
@@ -772,5 +815,39 @@ export function paintBrass(): HTMLCanvasElement {
   g.beginPath()
   g.arc(96, 32, 26, 0, Math.PI * 2)
   g.fill()
+  return c
+}
+
+/** the neighbour's window opposite (row 2, column 3 of the building): their own curtain, 0 shut to 1 open */
+export const NEIGH = { x0: 0.33, x1: 0.55, z0: 1.04, z1: 1.28 }
+export function paintNeighbour(pal: Palette, k: number): HTMLCanvasElement {
+  const W = 88,
+    H = 96
+  const c = canvas(W, H)
+  const g = c.getContext('2d')!
+  const night = pal.night
+  g.fillStyle = night ? '#F6C977' : pal.id === 'golden' ? '#6E5048' : '#5E6C78'
+  g.fillRect(0, 0, W, H)
+  if (k > 0.05) {
+    // head and shoulders, no features
+    g.fillStyle = night ? '#4A3424' : '#2E3238'
+    g.beginPath()
+    g.ellipse(W * 0.5, H * 0.5, W * 0.13, H * 0.14, 0, 0, Math.PI * 2)
+    g.fill()
+    g.beginPath()
+    g.moveTo(W * 0.2, H)
+    g.bezierCurveTo(W * 0.22, H * 0.7, W * 0.36, H * 0.66, W * 0.5, H * 0.66)
+    g.bezierCurveTo(W * 0.64, H * 0.66, W * 0.78, H * 0.7, W * 0.8, H)
+    g.fill()
+  }
+  const half = W * 0.5 * (1 - 0.82 * k)
+  g.fillStyle = night ? '#C9A97A' : pal.id === 'golden' ? '#F2D2B8' : '#F4D9C8'
+  g.fillRect(0, 0, half, H)
+  g.fillRect(W - half, 0, half, H)
+  g.fillStyle = 'rgba(120,60,40,0.18)'
+  for (let i = 1; i < 4; i++) {
+    g.fillRect((half * i) / 4, 0, 1, H)
+    g.fillRect(W - (half * i) / 4, 0, 1, H)
+  }
   return c
 }
