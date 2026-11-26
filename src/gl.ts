@@ -129,6 +129,8 @@ void main(){
   a=1.-(1.-a)*(1.-.15*stripe);
   // veiling: where the silk glows, its own scattered light drowns most of what is behind it
   a+=(1.-a)*.6*clamp(dot(trans*uTransK,vec3(.3,.5,.2)),0.,1.);
+  // skylight from the whole window glows in the silk even inside a shadow: it veils the view there too
+  a+=(1.-a)*.45*m.b*inR*uSunK;
   // seen at a grazing angle, light crosses more silk: a fold's turning edge is nearly opaque
   a=1.-pow(1.-a,1./max(abs(dot(n,V)),.25));
   if(uDebug>.5) { a=1.; col=uDebug<1.5?vec3(mk):uDebug<2.5?vec3(.5+.5*vKB.x):uDebug<3.5?vec3((vKB.y-1.)/1.5):N*.5+.5; }

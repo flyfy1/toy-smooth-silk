@@ -34,7 +34,7 @@ export function patternPixels(): Uint8Array {
   const r = rng(11)
   // slubs: a few slightly thicker weft threads, the irregularity that says "woven silk", not plastic
   const slub = new Float32Array(N)
-  for (let y = 0; y < N; y++) slub[y] = r() < 0.07 ? 0.5 + r() * 0.5 : 0
+  for (let y = 0; y < N; y++) slub[y] = r() < 0.05 ? 0.5 + r() * 0.5 : 0
   const base = [244, 235, 221]
   for (let y = 0; y < N; y++) {
     const vz = (y / (N - 1)) * CLOTH_H // metres down from the top
@@ -52,7 +52,7 @@ export function patternPixels(): Uint8Array {
       }
       // slub: a faint warm line, breaking off along its length
       const sl = slub[y] * (0.5 + 0.5 * Math.sin(x * 0.07 + y * 1.3) * Math.sin(x * 0.021 + y))
-      tone *= 1 - 0.035 * Math.max(0, sl)
+      tone *= 1 - 0.018 * Math.max(0, sl)
       let rr = base[0] * tone,
         gg = base[1] * tone,
         bb = base[2] * tone * (1 - 0.01 * sl)
