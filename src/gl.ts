@@ -4,7 +4,7 @@
 // the curtain's planar shadow into a quarter-resolution buffer, a 5-tap blur, and dust motes.
 
 import { CAM, MASK, RAIL, SILL, viewProj, type Palette, type View } from './scene'
-import { CHIMESPRITE, FLOOR, NEIGH, OUT, SILLSPRITE, WALL, maskPixels, paintNeighbour, paintBrass, paintChime, paintFloor, paintOutside, paintSillThings, paintWall, patternPixels } from './paint'
+import { CHIMESPRITE, FLOOR, NEIGH, OUT, SILLSPRITE, WALL, WALLSIDE, maskPixels, paintNeighbour, paintBrass, paintChime, paintFloor, paintOutside, paintSillThings, paintWall, patternPixels } from './paint'
 import type { PalId } from './scene'
 
 const HEAD = `#ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -326,6 +326,7 @@ export class Renderer {
     this.tex.neigh = this.texRaw(new Uint8Array([0, 0, 0, 0]), 1, 1, false, false)
     this.neighK = -1
     this.tex.wall = this.texCanvas(paintWall(), true)
+    this.tex.wallSide = this.texCanvas(paintWall(true), true)
     this.tex.floor = this.texCanvas(paintFloor(), true)
     this.tex.chime = this.texCanvas(paintChime(), false)
     this.tex.brass = this.texCanvas(paintBrass(), false)
@@ -336,6 +337,7 @@ export class Renderer {
     }
     const vquad = (x0: number, x1: number, y: number, z0: number, z1: number) => [x0, y, z0, 0, 1, x1, y, z0, 1, 1, x0, y, z1, 0, 0, x1, y, z1, 1, 0]
     wq('out', 'out', vquad(OUT.x0, OUT.x1, OUT.y, OUT.z0, OUT.z1))
+    wq('wallSide', 'wallSide', vquad(WALLSIDE.x0, WALLSIDE.x1, -0.003, WALLSIDE.z0, WALLSIDE.z1))
     wq('wall', 'wall', vquad(WALL.x0, WALL.x1, 0, WALL.z0, WALL.z1))
     wq('floor', 'floor', [FLOOR.x0, FLOOR.y0, 0, 0, 0, FLOOR.x1, FLOOR.y0, 0, 1, 0, FLOOR.x0, FLOOR.y1, 0, 0, 1, FLOOR.x1, FLOOR.y1, 0, 1, 1])
     const sz = SILL.z,
@@ -567,6 +569,7 @@ export class Renderer {
     quad('out', [expo * ot[0], expo * ot[1], expo * ot[2]])
     gl.uniform2f(q.u.uRain, 0, 0)
     if (s.neigh !== undefined && s.neigh > 0) quad('neigh', [expo * ot[0], expo * ot[1], expo * ot[2]])
+    quad('wallSide', rl(0.93 * expo))
     quad('wall', rl(0.93 * expo))
     // the floor
     {

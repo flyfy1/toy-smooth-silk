@@ -44,8 +44,9 @@ export interface Callbacks {
   onLine: (key: string, mode: 'line' | 'mum', vars?: Record<string, string | number>) => void
   /** the share peak: once per visit (first), then on opens (every) */
   onPeak: (kind: 'first' | 'every', n: number, data: Record<string, number>, snap: HTMLCanvasElement | null) => void
-  /** numbers for a card drawn without a peak */
-  onData: (data: () => Record<string, number>) => void
+  /** numbers and a snapshot for a card drawn without a peak (the snapshot renders and copies in one go:
+   *  a later copy of a WebGL canvas is blank) */
+  onData: (data: () => Record<string, number>, snap: () => HTMLCanvasElement | null) => void
 }
 
 export interface GameApi {
@@ -289,9 +290,10 @@ export function startGame(canvas: HTMLCanvasElement, cb: Callbacks): GameApi {
     hand.tz = hand.rz + mz
     hand.ty = Math.max(0.03, hand.ry + 0.02 + tent)
   }
-  function release() {
+  /** let go; `swing`: it was a pull, so the silk swings back (a tap, a poke, does not ease the air) */
+  function release(swing = true) {
     for (const d of hand.driven) cloth.w[d.i] = cloth.w0[d.i]
-    if (hand.on) relAt = t
+    if (hand.on && swing) relAt = t
     hand.on = false
     hand.driven = []
   }
@@ -344,8 +346,8 @@ export function startGame(canvas: HTMLCanvasElement, cb: Callbacks): GameApi {
       const nx = nrm[fi],
         ny = nrm[fi + 1],
         nz = nrm[fi + 2]
-      const rel = (Wx - vx) * nx + (Wy - vy) * ny + (0 - vz) * nz
-      const a = cAir * rel * h
+      // the wind's push at full strength; the air's drag on the silk's own motion eased after a release
+      const a = (CAIR * (Wx * nx + Wy * ny) - cAir * (vx * nx + vy * ny + vz * nz)) * h
       vx += a * nx
       vy += a * ny
       vz += a * nz
@@ -944,7 +946,10 @@ export function startGame(canvas: HTMLCanvasElement, cb: Callbacks): GameApi {
     audio.setBed(rainK > 0.3 ? 'rain' : pal().night ? 'night' : 'day', openness() < 0.1)
     audio.tickBed()
   }
-  cb.onData(peakData)
+  cb.onData(peakData, () => {
+    render()
+    return snapshot()
+  })
 
   // ---------- harness ----------
   const harness: ToyHarness = {
@@ -1189,7 +1194,7 @@ export function startGame(canvas: HTMLCanvasElement, cb: Callbacks): GameApi {
     L.pointerUpAt = t
     const pulled = Math.hypot(hand.tx - hand.rx, hand.tz - hand.rz)
     const speed = performance.now() - lastMove < 80 ? handVel : 0
-    release()
+    release(dn.moved && pulled > 0.03)
     if (!dn.moved && performance.now() - dn.t < 350) {
       if (onCat(dn.i)) poke()
       return

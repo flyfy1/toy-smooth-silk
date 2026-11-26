@@ -56,8 +56,9 @@ export default function App() {
         if (kind === 'first') sharePeak('silk', { snap, data })
         else peakEvery('silk', n, { snap, data })
       },
-      onData(fn) {
+      onData(fn, snap) {
         live.data = fn
+        live.snap = snap
       },
     })
     api.current = g

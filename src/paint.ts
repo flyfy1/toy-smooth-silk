@@ -484,30 +484,43 @@ export function paintOutside(pal: Palette): HTMLCanvasElement {
 
 // ---------- the wall with its window, and the floor ----------
 
-// wide enough for a landscape screen (desktop, the og image) as well as a phone
-export const WALL = { x0: -4.4, x1: 4.4, z0: 0, z1: 3.1 }
+export const WALL = { x0: -1.4, x1: 1.4, z0: 0, z1: 3.1 }
+/** the plain wall either side, wide enough for a landscape screen (desktop, the og image), at a lower
+ *  resolution so no texture is over 2048 px (old phones) */
+export const WALLSIDE = { x0: -4.4, x1: 4.4, z0: 0, z1: 3.1 }
 
-export function paintWall(): HTMLCanvasElement {
-  const ppm = 360
-  const W = Math.round((WALL.x1 - WALL.x0) * ppm),
-    H = Math.round((WALL.z1 - WALL.z0) * ppm)
+export function paintWall(side = false): HTMLCanvasElement {
+  const R = side ? WALLSIDE : WALL
+  const ppm = side ? 220 : 480
+  const W = Math.round((R.x1 - R.x0) * ppm),
+    H = Math.round((R.z1 - R.z0) * ppm)
   const c = canvas(W, H)
   const g = c.getContext('2d')!
   const r = rng(9)
-  const P = (x: number, z: number): [number, number] => [(x - WALL.x0) * ppm, (WALL.z1 - z) * ppm]
+  const P = (x: number, z: number): [number, number] => [(x - R.x0) * ppm, (R.z1 - z) * ppm]
   g.fillStyle = '#F3EADB'
   g.fillRect(0, 0, W, H)
   // lime wash: soft mottling
-  for (let i = 0; i < 2400; i++) {
+  for (let i = 0; i < (side ? 1400 : 900); i++) {
     const x = r() * W,
       y = r() * H,
-      rad = 20 + r() * 90
+      rad = (20 + r() * 90) * (ppm / 480)
     const gr = g.createRadialGradient(x, y, 0, x, y, rad)
     const d = r() < 0.5
     gr.addColorStop(0, d ? 'rgba(200,180,150,0.05)' : 'rgba(255,252,244,0.07)')
     gr.addColorStop(1, 'rgba(255,255,255,0)')
     g.fillStyle = gr
     g.fillRect(x - rad, y - rad, rad * 2, rad * 2)
+  }
+  if (side) {
+    const [k0x, k0y] = P(R.x0, 0.09)
+    g.fillStyle = '#E4D6BF'
+    g.fillRect(k0x, k0y, W, H - k0y)
+    g.fillStyle = 'rgba(255,255,255,0.5)'
+    g.fillRect(k0x, k0y, W, 2)
+    g.fillStyle = 'rgba(90,70,50,0.12)'
+    g.fillRect(k0x, H - 4, W, 4)
+    return c
   }
   // a soft stain under the sill
   const [sx, sy] = P(-0.1, 0.62)
@@ -611,7 +624,7 @@ export function paintWall(): HTMLCanvasElement {
   return c
 }
 
-export const FLOOR = { x0: -5.5, x1: 5.5, y0: 0, y1: 3.0 }
+export const FLOOR = { x0: -4, x1: 4, y0: 0, y1: 3.0 }
 
 export function paintFloor(): HTMLCanvasElement {
   const ppm = 240
